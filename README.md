@@ -1,4 +1,4 @@
-1. git --recurse-submodules -j'nproc' https://github.com/ALSCode/STM32H745ZI_SvdGenHal.git STM32H745ZI_SvdGenHal
+1. git clone --recurse-submodules -j8 https://github.com/ALSCode/STM32H745ZI_SvdGenHal.git STM32H745ZI_SvdGenHal
 2. cd STM32H745ZI_SvdGenHal
 4. cd tt-hal && git checkout als
 5. cd ..
