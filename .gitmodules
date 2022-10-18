@@ -1,0 +1,3 @@
+[submodule "tt-hal"]
+	path = tt-hal
+	url = git@github.com:zmij/tt-hal.git
