@@ -96,14 +96,14 @@ public:
 	{
 	}
 
-	void on(auto cnt)
+	void on(size_t color)
 	{
-		leds[cnt]->on();
+		leds[color]->on();
 	}
 
-	void off(auto cnt)
+	void off(size_t color)
 	{
-		leds[cnt]->off();
+		leds[color]->off();
 	}
 
 private:
@@ -122,16 +122,22 @@ int main()
 
 	Button<GPIOC, 13> button;
 
+	enum : size_t {
+		Green,
+		Red,
+		Orange
+	};
+
 	while (1) {
 
 		if (button.read()) {
-			leds.on(0u);
-			leds.on(1u);
-			leds.off(2u);
+			leds.on(Red);
+			leds.off(Orange);
+			leds.on(Green);
 		} else {
-			leds.off(0u);
-			leds.off(1u);
-			leds.on(2u);
+			leds.off(Red);
+			leds.on(Orange);
+			leds.off(Green);
 		}
 	}
 }
