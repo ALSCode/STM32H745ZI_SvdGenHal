@@ -16,6 +16,8 @@
 
 #include <array>
 #include <memory>
+#include <atomic>
+#include <cassert>
 
 void SystemInit()
 {
@@ -110,14 +112,69 @@ private:
 	std::array<std::unique_ptr<LedBase>, sizeof...(Leds)> leds;
 };
 
+class MockCriticalSection {
+};
+
+struct Shifter {
+	static std::atomic<size_t> value;
+};
+inline std::atomic<size_t> Shifter::value{std::numeric_limits<size_t>::max()};
+
+template<uint32_t FieldSize, typename CriticalSection = MockCriticalSection>
+struct Reg {
+public:
+	Reg &operator[](size_t pos)
+	{
+		Shifter::value.store(pos);
+		return *this;
+	}
+	Reg &operator=(uint32_t value)
+	{
+		size_t pos = Shifter::value.exchange(std::numeric_limits<size_t>::max());
+
+		if (pos != std::numeric_limits<size_t>::max()) {
+
+			CriticalSection cs;
+			uint32_t current = reg;
+			current &= ~(((1u << FieldSize) - 1u) << pos * FieldSize);
+			current |= (value << (pos * FieldSize));
+			reg = current;
+		}
+
+		return *this;
+	}
+
+private:
+	volatile uint32_t reg;
+};
+
+static_assert(sizeof(Reg<1>) == 4, "");
+
+struct Port {
+	Reg<2> moder;
+	Reg<1> otyper;
+	Reg<2> ospeedr;
+	Reg<2> pupdr;
+	Reg<1> idr;
+	Reg<1> odr;
+	Reg<1> bsrr;
+	Reg<1> lckr;
+	Reg<4> afrl;
+	Reg<4> afrh;
+} orange [[gnu::section(".Gpioe")]];
+
+static_assert(sizeof(Port) == 40, "");
+
 int main()
 {
 	ClockInit();
 
+	orange.moder[1] = 1u; // 01: General purpose output mode
+	orange.ospeedr[1] = 0u; // 00: Low speed
+
 	LedMux<
 		Led<GPIOB, 0>,
-		Led<GPIOB, 14>,
-		Led<GPIOE, 1>>
+		Led<GPIOB, 14>>
 		leds;
 
 	Button<GPIOC, 13> button;
@@ -132,11 +189,11 @@ int main()
 
 		if (button.read()) {
 			leds.on(Red);
-			leds.off(Orange);
+			orange.bsrr[17] = 1u;
 			leds.on(Green);
 		} else {
 			leds.off(Red);
-			leds.on(Orange);
+			orange.bsrr[1] = 1u;
 			leds.off(Green);
 		}
 	}
