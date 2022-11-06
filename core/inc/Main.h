@@ -11,4 +11,6 @@ void SystemInit(void);
 }
 #endif
 
+void ClockInit();
+
 #endif /* CORE_MAIN_H_ */

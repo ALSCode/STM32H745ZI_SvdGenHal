@@ -181,7 +181,25 @@ SECTIONS
   /* Modification 1 start */
   .gpio_sec (NOLOAD) : {
     . = ABSOLUTE(0x58021000);
-    *(.Gpioe)
+    *(.moder_e)
+    . = ABSOLUTE(0x58021004);
+    *(.otyper_e)
+    . = ABSOLUTE(0x58021008);
+    *(.ospeedr_e)
+    . = ABSOLUTE(0x5802100C);
+    *(.pupdr_e)
+    . = ABSOLUTE(0x58021010);
+    *(.idr_e)
+    . = ABSOLUTE(0x58021014);
+    *(.odr_e)
+    . = ABSOLUTE(0x58021018);
+    *(.bsrr_e)
+    . = ABSOLUTE(0x5802101C);
+    *(.lckr_e)
+    . = ABSOLUTE(0x58021020);
+    *(.afrl_e)
+    . = ABSOLUTE(0x58021024);
+    *(.afrh_e)
   } >GPIO
   /* Modification 1 end */
 
