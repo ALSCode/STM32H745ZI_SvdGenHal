@@ -179,7 +179,53 @@ SECTIONS
   } >DTCMRAM
 
   /* Modification 1 start */
-  .gpio_sec (NOLOAD) : {
+  .gpiob_sec (NOLOAD) : {
+    . = ABSOLUTE(0x58020400);
+    *(.moder_b)
+    . = ABSOLUTE(0x58020404);
+    *(.otyper_b)
+    . = ABSOLUTE(0x58020408);
+    *(.ospeedr_b)
+    . = ABSOLUTE(0x5802040C);
+    *(.pupdr_b)
+    . = ABSOLUTE(0x58020410);
+    *(.idr_b)
+    . = ABSOLUTE(0x58020414);
+    *(.odr_b)
+    . = ABSOLUTE(0x58020418);
+    *(.bsrr_b)
+    . = ABSOLUTE(0x5802041C);
+    *(.lckr_b)
+    . = ABSOLUTE(0x58020420);
+    *(.afrl_b)
+    . = ABSOLUTE(0x58020424);
+    *(.afrh_b)
+  } >GPIO
+
+  .gpioc_sec (NOLOAD) : {
+    . = ABSOLUTE(0x58020800);
+    *(.moder_c)
+    . = ABSOLUTE(0x58020804);
+    *(.otyper_c)
+    . = ABSOLUTE(0x58020808);
+    *(.ospeedr_c)
+    . = ABSOLUTE(0x5802080C);
+    *(.pupdr_c)
+    . = ABSOLUTE(0x58020810);
+    *(.idr_c)
+    . = ABSOLUTE(0x58020814);
+    *(.odr_c)
+    . = ABSOLUTE(0x58020818);
+    *(.bsrr_c)
+    . = ABSOLUTE(0x5802081C);
+    *(.lckr_c)
+    . = ABSOLUTE(0x58020820);
+    *(.afrl_c)
+    . = ABSOLUTE(0x58020824);
+    *(.afrh_c)
+  } >GPIO
+
+  .gpioe_sec (NOLOAD) : {
     . = ABSOLUTE(0x58021000);
     *(.moder_e)
     . = ABSOLUTE(0x58021004);
