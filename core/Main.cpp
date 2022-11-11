@@ -8,13 +8,15 @@
 #include "led_mux.hpp"
 
 #include <cassert>
-#include <random>
+#include <variant>
 
 class MockCriticalSection {};
 
-enum Access : uint8_t { R,
+enum Access : uint8_t {
+	R,
 	W,
-	RW };
+	RW
+};
 
 template<Access A, uint32_t S, uint32_t P>
 struct FieldTraits {
@@ -95,87 +97,103 @@ using OrangeLed = NewLed<ModerField1, OdrField1>;
 
 static_assert(sizeof(GreenLed) == 1, "");
 
+// template<typename... Leds>
+// class LedMuxNew {
+// public:
+// 	LedMuxNew()
+// 	{
+// 		init(leds, std::index_sequence_for<Leds...>{});
+// 	}
+
+// 	void on(size_t color)
+// 	{
+// 		onImpl(leds, color);
+// 	}
+
+// 	void off(size_t color)
+// 	{
+// 		offImpl(leds, color);
+// 	}
+
+// private:
+// 	template<class Tuple, std::size_t... Is>
+// 	void init(Tuple &t, std::index_sequence<Is...>)
+// 	{
+// 		(std::get<Is>(t).init(), ...);
+// 	}
+
+// 	template<class Tuple, size_t N = 0>
+// 	void onImpl(Tuple &tup, size_t idx)
+// 	{
+// 		if (N == idx) {
+// 			return std::get<N>(tup).on();
+// 		}
+
+// 		if constexpr (N + 1 < std::tuple_size_v<Tuple>) {
+// 			return onImpl<Tuple, N + 1>(tup, idx);
+// 		}
+// 	}
+
+// 	template<class Tuple, size_t N = 0>
+// 	void offImpl(Tuple &tup, size_t idx)
+// 	{
+// 		if (N == idx) {
+// 			std::get<N>(tup).off();
+// 			return;
+// 		}
+
+// 		if constexpr (N + 1 < std::tuple_size_v<Tuple>) {
+// 			return offImpl<Tuple, N + 1>(tup, idx);
+// 		}
+// 	}
+
+// 	std::tuple<Leds...> leds;
+// };
+
 template<typename... Leds>
 class LedMuxNew {
 public:
-	LedMuxNew()
+	using var_t = std::variant<Leds...>;
+
+	LedMuxNew():
+		leds{Leds{}...}
 	{
-		init(leds, std::index_sequence_for<Leds...>{});
+		(Leds{}.init(), ...);
 	}
 
-	void on(size_t color)
+	constexpr void on(size_t color)
 	{
-		onImpl(leds, color);
+		std::visit([](auto &led) { led.on(); }, leds[color]);
 	}
 
-	void off(size_t color)
+	constexpr void off(size_t color)
 	{
-		offImpl(leds, color);
+		std::visit([](auto &led) { led.off(); }, leds[color]);
 	}
 
 private:
-	template<class Tuple, std::size_t... Is>
-	void init(Tuple &t, std::index_sequence<Is...>)
-	{
-		(std::get<Is>(t).init(), ...);
-	}
-
-	template<class Tuple, size_t N = 0>
-	void onImpl(Tuple &tup, size_t idx)
-	{
-		if (N == idx) {
-			return std::get<N>(tup).on();
-		}
-
-		if constexpr (N + 1 < std::tuple_size_v<Tuple>) {
-			return onImpl<Tuple, N + 1>(tup, idx);
-		}
-	}
-
-	template<class Tuple, size_t N = 0>
-	void offImpl(Tuple &tup, size_t idx)
-	{
-		if (N == idx) {
-			std::get<N>(tup).off();
-			return;
-		}
-
-		if constexpr (N + 1 < std::tuple_size_v<Tuple>) {
-			return offImpl<Tuple, N + 1>(tup, idx);
-		}
-	}
-
-	std::tuple<Leds...> leds;
+	var_t leds[sizeof...(Leds)];
 };
 
 int main()
 {
 	ClockInit();
 
-	std::random_device rd;
-	std::mt19937 rng(rd());
-	std::uniform_int_distribution<std::mt19937::result_type> dist(0, 2);
-
 	// LedMux<Led<GPIOB, 0>, Led<GPIOB, 14>> leds;
 	LedMuxNew<GreenLed, RedLed, OrangeLed> leds;
 
 	Button<GPIOC, 13> button;
-	size_t r;
 
 	while (1) {
 
-		r = dist(rng);
-
-		for (size_t i = 0; i != 1000000; i++) {
-			__asm volatile("NOP");
-		}
-
 		if (button.read()) {
-			leds.on(r);
+			leds.on(Green);
+			leds.on(Red);
+			leds.off(Orange);
 		} else {
 			leds.off(Green);
 			leds.off(Red);
-			leds.off(Orange);
+			leds.on(Orange);
 		}
 	}
 }
