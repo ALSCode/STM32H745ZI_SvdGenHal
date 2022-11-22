@@ -4,6 +4,7 @@
 #include "gpiobregisters.hpp" // For Gpiob
 #include "gpiocregisters.hpp" // For Gpioc
 
+#include "tt_variant.hpp"
 #include "button.hpp"
 #include "led_mux.hpp"
 
@@ -150,25 +151,29 @@ static_assert(sizeof(GreenLed) == 1, "");
 // 	std::tuple<Leds...> leds;
 // };
 
+
 template<typename... Leds>
 class LedMuxNew {
 public:
-	using var_t = std::variant<Leds...>;
+	using var_t = Variant<Leds...>;
+	// using var_t = std::variant<Leds...>;
 
 	LedMuxNew():
-		leds{Leds{}...}
+		leds{var_t{Leds{}}...}
 	{
 		(Leds{}.init(), ...);
 	}
 
 	constexpr void on(size_t color)
 	{
-		std::visit([](auto &led) { led.on(); }, leds[color]);
+		// std::visit([](auto &led) { led.on(); }, leds[color]);
+		leds[color].visit([](auto &led) { led.on(); });
 	}
 
 	constexpr void off(size_t color)
 	{
-		std::visit([](auto &led) { led.off(); }, leds[color]);
+		// std::visit([](auto &led) { led.off(); }, leds[color]);
+		leds[color].visit([](auto &led) { led.off(); });
 	}
 
 private:
@@ -181,7 +186,7 @@ int main()
 
 	// LedMux<Led<GPIOB, 0>, Led<GPIOB, 14>> leds;
 	LedMuxNew<GreenLed, RedLed, OrangeLed> leds;
-
+	
 	Button<GPIOC, 13> button;
 
 	while (1) {
